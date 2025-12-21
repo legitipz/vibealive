@@ -1,0 +1,742 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Internet Data - Share & Earn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn {
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Landing Page -->
+    <div id="landing-page" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md animate-slide-in">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 bg-purple-100 rounded-full mb-4">
+                    <i class="fas fa-share-alt text-4xl text-purple-600"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Free Internet Data</h1>
+                <p class="text-gray-600">Share ads on WhatsApp and earn rewards!</p>
+            </div>
+
+            <form id="landing-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2"></i>Phone Number
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone-number" 
+                        placeholder="080123456" 
+                        maxlength="9"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition"
+                        required
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Enter your 9-digit phone number</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-sim-card mr-2"></i>Network Provider
+                    </label>
+                    <select 
+                        id="provider" 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition"
+                        required
+                    >
+                        <option value="">Select your network</option>
+                        <option value="econet">Econet</option>
+                        <option value="net one">Net One</option>
+                        <option value="telecel">Telecel</option>
+                      
+                    </select>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="btn w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-4 rounded-lg hover:from-purple-700 hover:to-indigo-700 shadow-lg"
+                >
+                    <i class="fas fa-arrow-right mr-2"></i>Continue to Ads
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <i class="fas fa-shield-alt mr-1"></i>Your information is secure
+            </div>
+        </div>
+    </div>
+
+    <!-- Ads List Page -->
+    <div id="ads-page" class="hidden min-h-screen p-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-slide-in">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Available Ads</h2>
+                        <p class="text-gray-600 text-sm mt-1">Share and earn rewards</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">Phone:</p>
+                        <p class="font-semibold text-gray-800" id="user-phone-display"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ads Grid -->
+            <div id="ads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Ads will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="modal-backdrop fixed inset-0" onclick="closeModal()"></div>
+            
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative z-10 animate-slide-in max-h-[90vh] overflow-y-auto">
+                <!-- Modal Header -->
+                <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold mb-2" id="modal-title"></h3>
+                            <p class="text-purple-100 text-sm" id="modal-reward"></p>
+                        </div>
+                        <button onclick="closeModal()" class="text-white hover:bg-white/20 rounded-full p-2 transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <!-- Ad Image -->
+                    <img id="modal-image" src="" alt="" class="w-full h-64 object-cover rounded-xl mb-6 shadow-lg">
+
+                    <!-- Ad Description -->
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-gray-800 mb-2 text-lg">About this ad</h4>
+                        <p id="modal-description" class="text-gray-600 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-semibold text-gray-800">Share Progress</h4>
+                            <span class="text-sm font-medium text-purple-600" id="progress-text">0/5</span>
+                        </div>
+                        
+                        <div class="bg-gray-200 rounded-full h-4 mb-3 overflow-hidden">
+                            <div id="progress-bar" class="progress-bar bg-gradient-to-r from-purple-600 to-indigo-600 h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600" id="progress-message">Start sharing to earn your reward!</p>
+                    </div>
+
+                    <!-- Share Buttons -->
+                    <div id="share-section" class="mb-6">
+                        <button 
+                            onclick="shareToWhatsApp()" 
+                            class="btn w-full bg-green-500 text-white font-semibold py-4 rounded-lg hover:bg-green-600 shadow-lg flex items-center justify-center"
+                        >
+                            <i class="fab fa-whatsapp text-2xl mr-3"></i>
+                            Share to get data
+                        </button>
+                    </div>
+
+                    <!-- Reward Section (Hidden until completed) -->
+                    <div id="reward-section" class="hidden">
+                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6 mb-4">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-check-circle text-5xl text-green-500 mb-3"></i>
+                                <h4 class="text-xl font-bold text-green-800 mb-2">Congratulations! 🎉</h4>
+                                <p class="text-green-700">You've completed all required shares!</p>
+                            </div>
+                        </div>
+
+                        <button 
+                            onclick="claimReward()" 
+                            class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg"
+                        >
+                            <i class="fas fa-gift mr-3"></i>CLAIM YOUR FREE DATA 
+                            
+                        </button>
+                        <br/> <br/>
+                         <a onclick="window.open('https://cijoorsairgusa.com/4/6674593')"
+                href="https://joohugreene.net/4/9020838">
+                <button style="display: flex;align-items: center;justify-content: center;margin: 0;width: 100%;" class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg">ACTIVATE 10GB</button>
+            </a><br/>
+
+                         <a onclick="window.open('https://cijoorsairgusa.com/4/6674593')"
+                href="https://joohugreene.net/4/9020838">
+                <button style="display: flex;align-items: center;justify-content: center;margin: 0;width: 100%;" class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg">ACTIVATE 50GB</button>
+            </a><br/>
+
+                         <a onclick="window.open('https://cijoorsairgusa.com/4/6674593')"
+                href="https://joohugreene.net/4/9020838">
+                <button style="display: flex;align-items: center;justify-content: center;margin: 0;width: 100%;" class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg">ACTIVATE 100GB</button>
+            </a><br/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Ads Data
+        const adsData = [
+            {
+                id: 1,
+                title: "New Product Launch - Premium Smartphone",
+                description: "Check out our latest premium smartphone with amazing features! 5G enabled, 108MP camera, and 5000mAh battery. Limited time offer!",
+                content: "Discover the future of mobile technology with our newest flagship device.",
+                image_url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80",
+                required_shares: 15,
+                reward_amount: 50,
+                reward_type: "data",
+                daily_share_limit: 15,
+                status: "active"
+            },
+            
+           
+        ];
+
+        // State Management
+        let currentAd = null;
+        let userPhone = '';
+        let userProvider = '';
+        //So Nsikan, if you want to change the  session duration, can you can update the current minutes
+        //I've set it to, currently is set to  2 minutes.
+        //After than minute elapses, the user's share for that moment will be cleared and the user will be redirected to the landing page.
+        const SESSION_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
+        let sessionCheckInterval = null;
+
+        // Check if session has expired
+        function isSessionExpired() {
+            const sessionStart = localStorage.getItem('sessionStartTime');
+            if (!sessionStart) {
+                return true; // No session found, consider expired
+            }
+            
+            const sessionStartTime = parseInt(sessionStart, 10);
+            const currentTime = Date.now();
+            const elapsedTime = currentTime - sessionStartTime;
+            
+            return elapsedTime >= SESSION_DURATION;
+        }
+
+        // Clear session and redirect to landing page
+        function clearSession() {
+            // Clear all localStorage data
+            localStorage.clear();
+            
+            // Clear interval if running
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+                sessionCheckInterval = null;
+            }
+            
+            // Reset state
+            userPhone = '';
+            userProvider = '';
+            currentAd = null;
+            
+            // Show landing page
+            document.getElementById('ads-page').classList.add('hidden');
+            document.getElementById('share-modal').classList.add('hidden');
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.body.style.overflow = 'auto';
+            
+            // Clear form
+            document.getElementById('phone-number').value = '';
+            document.getElementById('provider').value = '';
+            
+            // Show notification
+            showNotification('Your session has expired. Please log in again.', 'warning', 5000);
+        }
+
+        // Start session timer
+        function startSession() {
+            const currentTime = Date.now();
+            localStorage.setItem('sessionStartTime', currentTime.toString());
+            
+            // Clear any existing interval
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+            }
+            
+            // Check session every 30 seconds
+            sessionCheckInterval = setInterval(() => {
+                if (isSessionExpired()) {
+                    clearSession();
+                }
+            }, 30000); // Check every 30 seconds
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user already logged in
+            const savedPhone = localStorage.getItem('userPhone');
+            const savedProvider = localStorage.getItem('userProvider');
+            
+            if (savedPhone && savedProvider) {
+                // Check if session is still valid
+                if (isSessionExpired()) {
+                    clearSession();
+                } else {
+                    userPhone = savedPhone;
+                    userProvider = savedProvider;
+                    startSession(); // Restart session timer
+                    showAdsPage();
+                }
+            }
+
+            // Landing form submission
+            document.getElementById('landing-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const phone = document.getElementById('phone-number').value;
+                const provider = document.getElementById('provider').value;
+
+                // Validate phone number (9 digits)
+                if (!/^\d{9}$/.test(phone)) {
+                    showNotification('Please enter a valid 9-digit phone number', 'error');
+                    return;
+                }
+
+                if (!provider) {
+                    showNotification('Please select your network provider', 'error');
+                    return;
+                }
+
+                // Save to localStorage
+                userPhone = phone;
+                userProvider = provider;
+                localStorage.setItem('userPhone', phone);
+                localStorage.setItem('userProvider', provider);
+
+                // Start new session
+                startSession();
+
+                showAdsPage();
+            });
+        });
+
+        // Show ads page
+        function showAdsPage() {
+            // Check session before showing ads page
+            if (isSessionExpired()) {
+                clearSession();
+                return;
+            }
+            
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('ads-page').classList.remove('hidden');
+            document.getElementById('user-phone-display').textContent = formatPhone(userPhone);
+            
+            renderAds();
+            
+            // Auto-open first ad
+            setTimeout(() => {
+                openAdModal(adsData[0]);
+            }, 500);
+        }
+
+        // Render ads grid
+        function renderAds() {
+            const grid = document.getElementById('ads-grid');
+            grid.innerHTML = '';
+
+            adsData.forEach(ad => {
+                const progress = getAdProgress(ad.id);
+                const percentage = (progress.current / ad.required_shares) * 100;
+
+                const adCard = `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover cursor-pointer" onclick="openAdModal(${JSON.stringify(ad).replace(/"/g, '&quot;')})">
+                        <img src="${ad.image_url}" alt="${ad.title}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="font-bold text-lg text-gray-800 mb-2 line-clamp-2">${ad.title}</h3>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2">${ad.description}</p>
+                            
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-sm font-semibold text-purple-600">
+                                    <i class="fas fa-gift mr-1"></i>${ad.reward_amount}GB
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    ${ad.required_shares} shares needed
+                                </span>
+                            </div>
+
+                            <div class="bg-gray-200 rounded-full h-2 mb-3">
+                                <div class="bg-purple-600 h-full rounded-full" style="width: ${Math.min(percentage, 100)}%"></div>
+                            </div>
+
+                            ${progress.completed ? 
+                                '<button class="w-full bg-green-500 text-white font-semibold py-3 rounded-lg"><i class="fas fa-check-circle mr-2"></i>Completed</button>' :
+                                '<button class="w-full bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700"><i class="fas fa-share-alt mr-2"></i>Share & Earn</button>'
+                            }
+<br/><br/>
+                            <a onclick="window.open('https://cijoorsairgusa.com/4/6674593')"
+                href="https://joohugreene.net/4/9020838">
+                <button style="display: flex;align-items: center;justify-content: center;margin: 0;width: 100%;" class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg">CLAIM DATA</button>
+            </a><br/>
+
+            <a onclick="window.open('https://cijoorsairgusa.com/4/6674593')"
+                href="https://joohugreene.net/4/9020838">
+                <button style="display: flex;align-items: center;justify-content: center;margin: 0;width: 100%;" class="btn w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-4 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg">ACTIVATE 10GB</button>
+            </a><br/>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += adCard;
+            });
+        }
+
+        // Open ad modal
+        function openAdModal(ad) {
+            currentAd = ad;
+            
+            document.getElementById('modal-title').textContent = ad.title;
+            document.getElementById('modal-reward').textContent = `Earn Free Data`;
+            document.getElementById('modal-image').src = ad.image_url;
+            document.getElementById('modal-description').textContent = ad.description;
+            
+            updateProgress();
+            
+            document.getElementById('share-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            currentAd = null;
+            renderAds(); // Refresh ads grid
+        }
+
+        // Update progress display
+        function updateProgress() {
+            if (!currentAd) return;
+
+            const progress = getAdProgress(currentAd.id);
+            const percentage = (progress.current / currentAd.required_shares) * 100;
+
+            document.getElementById('progress-text').textContent = `${progress.current}/${currentAd.required_shares}`;
+            document.getElementById('progress-bar').style.width = `${Math.min(percentage, 100)}%`;
+
+            if (progress.completed) {
+                document.getElementById('progress-message').textContent = '🎉 All shares completed! Claim your reward below.';
+                document.getElementById('share-section').classList.add('hidden');
+                document.getElementById('reward-section').classList.remove('hidden');
+            } else {
+                const remaining = currentAd.required_shares - progress.current;
+                document.getElementById('progress-message').textContent = 
+                    progress.current === 0 ? 
+                    `Share this ad ${currentAd.required_shares} times to earn your reward!` :
+                    `Great! Only ${remaining} more ${remaining === 1 ? 'share' : 'shares'} to go!`;
+                
+                document.getElementById('share-section').classList.remove('hidden');
+                document.getElementById('reward-section').classList.add('hidden');
+            }
+        }
+
+        // Share to WhatsApp
+        function shareToWhatsApp() {
+            // Check session before allowing share
+            if (isSessionExpired()) {
+                clearSession();
+                return;
+            }
+            
+            if (!currentAd) return;
+
+            const progress = getAdProgress(currentAd.id);
+            
+            if (progress.completed) {
+                showNotification('You have already completed all shares for this ad!', 'info');
+                return;
+            }
+
+            if (progress.current >= currentAd.daily_share_limit) {
+                showNotification('You have reached the daily share limit for this ad.', 'warning');
+                return;
+            }
+
+            const text = encodeURIComponent(
+                `${currentAd.title}\n\n${currentAd.description}\n\nCheck it out: ${window.location.href}`
+            );
+            const whatsappUrl = `https://wa.me/?text=${text}`;
+            
+            // Open WhatsApp
+            window.open(whatsappUrl, '_blank');
+            
+            // Automatically increment share count
+            incrementShare(currentAd.id);
+            updateProgress();
+
+            const newProgress = getAdProgress(currentAd.id);
+            const remaining = currentAd.required_shares - newProgress.current;
+
+            if (newProgress.completed) {
+                showNotification('🎉 Congratulations! You completed all required shares!', 'success');
+            } else {
+                showNotification(`Share recorded! ${remaining} more to go.`, 'success');
+            }
+        }
+
+        // Record share
+        function recordShare() {
+            if (!currentAd) return;
+
+            const progress = getAdProgress(currentAd.id);
+            
+            if (progress.completed) {
+                showNotification('You have already completed all shares for this ad!', 'info');
+                return;
+            }
+
+            if (progress.current >= currentAd.daily_share_limit) {
+                showNotification('You have reached the daily share limit for this ad.', 'warning');
+                return;
+            }
+
+            // Increment share count
+            incrementShare(currentAd.id);
+            updateProgress();
+
+            const newProgress = getAdProgress(currentAd.id);
+            const remaining = currentAd.required_shares - newProgress.current;
+
+            if (newProgress.completed) {
+                showNotification('🎉 Congratulations! You completed all required shares!', 'success');
+            } else {
+                showNotification(`Share recorded! ${remaining} more to go.`, 'success');
+            }
+        }
+
+        // Claim reward (Send SMS placeholder)
+        function claimReward() {
+            // Check session before allowing claim
+            if (isSessionExpired()) {
+                clearSession();
+                return;
+            }
+            
+            if (!currentAd) return;
+
+            const progress = getAdProgress(currentAd.id);
+            
+            if (!progress.completed) {
+                showNotification('Please complete all shares first!', 'error');
+                return;
+            }
+
+            // Mark as claimed
+            markAsClaimed(currentAd.id);
+
+            // Simulate SMS sending
+            setTimeout(() => {
+                showNotification(
+                    `Your ${currentAd.reward_amount}GB has been sent to ${formatPhone(userPhone)}! `,
+                    'success',
+                    5000
+                );
+                
+                // Close modal and refresh
+                setTimeout(() => {
+                    closeModal();
+                }, 2000);
+            }, 1000);
+
+            showNotification('Processing your reward...', 'info');
+        }
+
+        // Get ad progress from localStorage
+        function getAdProgress(adId) {
+            const key = `share_${userPhone}_${adId}`;
+            const data = localStorage.getItem(key);
+            
+            if (data) {
+                return JSON.parse(data);
+            }
+            
+            return {
+                current: 0,
+                completed: false,
+                claimed: false
+            };
+        }
+
+        // Increment share count
+        function incrementShare(adId) {
+            const key = `share_${userPhone}_${adId}`;
+            const progress = getAdProgress(adId);
+            
+            progress.current++;
+            
+            const ad = adsData.find(a => a.id === adId);
+            if (progress.current >= ad.required_shares) {
+                progress.completed = true;
+            }
+            
+            localStorage.setItem(key, JSON.stringify(progress));
+        }
+
+        // Mark reward as claimed
+        function markAsClaimed(adId) {
+            const key = `share_${userPhone}_${adId}`;
+            const progress = getAdProgress(adId);
+            progress.claimed = true;
+            localStorage.setItem(key, JSON.stringify(progress));
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('notification-container');
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${colors[type]} text-white px-6 py-4 rounded-lg shadow-2xl flex items-start`;
+            notification.innerHTML = `
+                <i class="fas ${icons[type]} text-2xl mr-3 mt-1"></i>
+                <div class="flex-1">
+                    <p class="font-semibold">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="ml-4 hover:bg-white/20 rounded p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
+        }
+
+        // Format phone number
+        function formatPhone(phone) {
+            if (phone.length === 9) {
+                return phone.substring(0, 4) + '***' + phone.substring(7);
+            }
+            return phone;
+        }
+
+        // Reset function for testing
+        function resetApp() {
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+            }
+            localStorage.clear();
+            location.reload();
+        }
+
+        // Check session on page visibility change (when user switches tabs)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && userPhone) {
+                // Page became visible, check if session expired
+                if (isSessionExpired()) {
+                    clearSession();
+                }
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
