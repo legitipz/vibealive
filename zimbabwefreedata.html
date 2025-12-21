@@ -509,7 +509,7 @@
                 const remaining = currentAd.required_shares - progress.current;
                 document.getElementById('progress-message').textContent = 
                     progress.current === 0 ? 
-                    `Share this ad ${currentAd.required_shares} times to your fimilies and friends to earn your reward!` :
+                    `Share ${currentAd.required_shares} times to your fimilies and friends to earn your reward!` :
                     `Great! Only ${remaining} more ${remaining === 1 ? 'share' : 'shares'} to go!`;
                 
                 document.getElementById('share-section').classList.remove('hidden');
