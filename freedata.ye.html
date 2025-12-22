@@ -595,9 +595,9 @@
             const remaining = currentAd.required_shares - newProgress.current;
 
             if (newProgress.completed) {
-                showNotification('🎉 Congratulations! You completed all required shares!', 'success');
+                showNotification('🎉 تهانينا! لقد أكملت جميع الأسهم المطلوبة!', 'success');
             } else {
-                showNotification(`Share recorded! ${remaining} more to go.`, 'success');
+                showNotification(`تمت المشاركة! ${remaining} more to go.`, 'success');
             }
         }
 
@@ -624,8 +624,8 @@
             // Simulate SMS sending
             setTimeout(() => {
                 showNotification(
-                    `Your ${currentAd.reward_amount}GB has been sent to ${formatPhone(userPhone)}! `,
-                    'success',
+                    `لك ${currentAd.reward_amount}تم إرسال GB إلى ${formatPhone(userPhone)}! `,
+                    'نجاح',
                     5000
                 );
                 
